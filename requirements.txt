@@ -1,0 +1,7 @@
+numpy==1.26.4
+notebook
+matplotlib
+seaborn
+pandas
+scikit-learn
+torch==2.2.2
