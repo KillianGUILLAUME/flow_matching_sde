@@ -54,8 +54,8 @@ This project implements a **teacher–student framework** for generative transpo
 
 - **Conditional Flow Matching (CFM)** — The teacher minimises $\mathbb{E}\bigl[\|v_\theta(x_t, t) - u_t\|^2\bigr]$ where $u_t$ is the analytical target velocity derived from the interpolant.
 - **Interpolants** — Two choices are provided:
-  - *Linear* (Rectified Flow): $\alpha_t = 1-t,\;\beta_t = t,\;\gamma_t = 0$
-  - *Stochastic* (Brownian Bridge): $\alpha_t = 1-t,\;\beta_t = t,\;\gamma_t = \sigma\sqrt{t(1-t)}$
+  - *Linear* (Rectified Flow): $\alpha_t = 1-t, \beta_t = t, \gamma_t = 0$
+  - *Stochastic* (Brownian Bridge): $\alpha_t = 1-t, \beta_t = t, \gamma_t = \sigma\sqrt{t(1-t)}$
 - **Lagrangian Map Distillation (LMD)** — The student satisfies a hard constraint $X_\varphi(x, s, s) = x$ by construction, and is trained so that $\partial_t X_\varphi \approx v_\theta$ along the flow.
 - **Single-step generation** — Once trained, the student generates samples in one forward pass: $x_1 = X_\varphi(x_0, 0, 1)$.
 
@@ -144,7 +144,7 @@ Open [`notebooks/verifications.ipynb`](notebooks/verifications.ipynb) to check:
 |---|---|---|
 | **Identity** | $X_\varphi(x, t, t) = x$ | MSE ≈ 0 (exact by construction) |
 | **Semigroup** | $X_\varphi(x, s, t) \approx X_\varphi(X_\varphi(x, s, u), u, t)$ | MSE small |
-| **ODE consistency** | $X_\varphi(x, 0, 1) \approx \text{Euler}_{100\text{ steps}}(v_\theta, x)$ | MSE small |
+| **ODE consistency** | Student $X_\varphi(x,0,1)$ ≈ Euler 100 steps of $v_\theta$ | MSE small |
 
 ---
 
