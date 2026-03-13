@@ -300,3 +300,70 @@ class LagrangianMapDistillationLossOptimized:
         loss = F.mse_loss(avg_velocity, v_theta)
         
         return loss
+
+
+# ============================================
+# Bridge Matching Loss — DSBM (Shi et al., NeurIPS 2023)
+# ============================================
+
+class BridgeMatchingLoss:
+    """
+    Loss de Bridge Matching pour l'algorithme DSBM (Algorithm 2 du papier).
+
+    L'objectif est :
+        L(θ) = E_{(x₀,x₁)~π_k, t~U[0,1-ε]} [ ||u_θ(x_t, t) - u*(x_t, t|x₁)||² ]
+
+    où :
+        - (x₀, x₁) ~ π_k est le couplage courant (indépendant à l'itération 0,
+          puis mis à jour via SDE aux itérations suivantes)
+        - x_t = (1-t) x₀ + t x₁ + σ√(t(1-t)) z   pont brownien de référence
+        - u*(x_t, t|x₁) = (x₁ - x_t) / (1-t)     dérive analytique du pont conditionnel
+
+    Référence : Proposition 2 + Algorithm 2, Shi et al. NeurIPS 2023.
+    """
+
+    def __init__(self, drift_network, sigma: float = 0.5):
+        """
+        Args:
+            drift_network : DriftNetwork u_θ(x_t, t) à entraîner
+            sigma         : amplitude du bruit du processus de référence (Brownian Bridge)
+        """
+        self.drift_network = drift_network
+        self.sigma = sigma
+
+    def __call__(self, x0: torch.Tensor, x1: torch.Tensor) -> torch.Tensor:
+        """
+        Calcule la Bridge Matching Loss sur un batch.
+
+        Args:
+            x0 : (B, D)  — points source du couplage courant (ex: bruit gaussien)
+            x1 : (B, D)  — points target du couplage courant (ex: two-moons ou x̂₁ du SDE)
+
+        Returns:
+            loss : scalaire
+        """
+        batch_size = x0.shape[0]
+        device = x0.device
+
+        # 1. Tire t ~ U[0, 1-ε]  (évite la singularité en t=1)
+        eps = 1e-3
+        t = torch.rand(batch_size, 1, device=device) * (1.0 - eps)
+
+        # 2. Tire un point x_t du Brownian Bridge conditionnel (x₀ → x₁)
+        #    x_t | x₀, x₁  ~  N( (1-t)x₀ + t x₁,  σ²t(1-t) I )
+        mean_t = (1.0 - t) * x0 + t * x1
+        std_t = self.sigma * torch.sqrt(t * (1.0 - t) + 1e-8)
+        z = torch.randn_like(x0)
+        x_t = mean_t + std_t * z
+
+        # 3. Dérive analytique cible : u*(x_t, t|x₁) = (x₁ - x_t) / (1-t)
+        denom = torch.clamp(1.0 - t, min=eps)
+        u_target = (x1 - x_t) / denom
+
+        # 4. Prédiction du réseau
+        u_pred = self.drift_network(x_t, t)
+
+        # 5. Loss MSE
+        loss = F.mse_loss(u_pred, u_target)
+
+        return loss
