@@ -104,7 +104,7 @@ Theoretically, the Zero-Noise Limit of a Diffusion Schrödinger Bridge matches t
   <img src="figures/dsb_phase_study/phase_study_zero_noise_limit.png" alt="Phase Study: The Continuous Bifurcation" width="700">
 </p>
 
-*As $\sigma$ decreases, the **Trajectory Variance** (the Brownian "tremor", in red) asymptotes to absolute zero. The highly stochastic paths structurally freeze into straight, deterministic ODE lines. Concurrently, the **Kinetic Energy** (in blue) drops and stabilizes at the minimal physical cost corresponding to the Monge-Kantorovich optimal transport.*
+*As $sigma$ decreases, the **Trajectory Variance** (the Brownian "tremor", in red) asymptotes to absolute zero. The highly stochastic paths structurally freeze into straight, deterministic ODE lines. Concurrently, the **Kinetic Energy** (in blue) drops and stabilizes at the minimal physical cost corresponding to the Monge-Kantorovich optimal transport.*
 
 ## Usage & Repository Structure
 
